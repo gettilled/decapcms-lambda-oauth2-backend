@@ -1,5 +1,5 @@
 import * as cdk from "aws-cdk-lib";
-import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
+import { EndpointType, LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
@@ -11,10 +11,10 @@ export class DecapCMSLambdaOauth2BackendStack extends cdk.Stack {
     super(scope, id, props);
 
     const oauthGithubClientId = ssm.StringParameter.fromStringParameterAttributes(this, "OauthGithubClientId", {
-      parameterName: "/CDK/DecapCMSOAuthBackend/OAUTH_GITHUB_CLIENT_ID",
+      parameterName: "/tilled-docs/OAUTH_GITHUB_CLIENT_ID",
     });
     const oauthGithubClientSecret = ssm.StringParameter.fromStringParameterAttributes(this, "OauthGithubClientSecret", {
-      parameterName: "/CDK/DecapCMSOAuthBackend/OAUTH_GITHUB_CLIENT_SECRET",
+      parameterName: "/tilled-docs/OAUTH_GITHUB_CLIENT_SECRET",
     });
 
     const defaultPathFunction = new NodejsFunction(this, "lambda", {
@@ -55,6 +55,10 @@ export class DecapCMSLambdaOauth2BackendStack extends cdk.Stack {
     const api = new LambdaRestApi(this, "OAuth2BackendAPI", {
       handler: defaultPathFunction,
       proxy: false,
+      endpointConfiguration: {
+        types: [EndpointType.PRIVATE],
+        vpcEndpoints:[],
+      }
     });
 
     const auth = api.root.addResource("auth");
